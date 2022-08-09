@@ -26,8 +26,8 @@
 
       <div class="d-flex pa-4" style="height: 90px">
         <v-text-field class="mr-2" v-model="text" label="Enter a new task" outlined
-                      v-on:keyup.enter="createListTask"></v-text-field>
-        <v-btn dark x-large color="blue" @click="createListTask" style="height: 55px">
+                      v-on:keyup.enter="addNewTask"></v-text-field>
+        <v-btn dark x-large color="blue" @click="addNewTask" style="height: 55px">
           <v-icon>
             mdi-plus
           </v-icon>
@@ -85,10 +85,10 @@
         </v-btn>
         <div class="d-flex justify-space-around" style="gap: 20px">
           <div class="blue pa-2">
-            <span class="white--text">SUCCESS: {{ onSuccess(list).length }}</span>
+            <span class="white--text">SUCCESS: {{ successTasksCounter }}</span>
           </div>
           <div class="red darken-1 pa-2">
-            <span class="white--text">PENDING: {{ onPending(list).length }}</span>
+            <span class="white--text">PENDING: {{ pendingTasksCounter }}</span>
           </div>
         </div>
       </v-card-actions>
@@ -103,16 +103,16 @@ export default {
   data: () => ({
     text: '',
     date: new Date().toLocaleDateString('en-US', {year: 'numeric', month: '2-digit', day: '2-digit'}),
-
     list: [],
   }),
 
   methods: {
-    createListTask() {
+    addNewTask() {
       const newNote = {text: this.text, status: false}
-      if (this.text !== '' && this.text.trim() !== '') {
-        this.list.push(newNote);
+      if(!this.text || !this.text.trim()){
+        return ;
       }
+      this.list.push(newNote);
       this.text = '';
     },
 
@@ -123,17 +123,15 @@ export default {
     deleteAllTask() {
       this.list = [];
     },
+  },
 
-    onSuccess(status){
-      return status.filter(item => {
-        return item.status === true;
-      })
+  computed: {
+    successTasksCounter(){
+      return this.list.filter(item => item.status).length;
     },
 
-    onPending(status){
-      return status.filter(item => {
-        return item.status === false;
-      })
+    pendingTasksCounter(){
+      return this.list.filter(item => !item.status).length;
     }
   },
 
