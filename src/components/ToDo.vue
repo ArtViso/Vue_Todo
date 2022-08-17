@@ -25,13 +25,23 @@
       </v-img>
 
       <div class="d-flex pa-4" style="height: 90px">
-        <v-text-field class="mr-2" v-model="text" label="Enter a new task" outlined
-                      v-on:keyup.enter="addNewTask"></v-text-field>
-        <v-btn dark x-large color="blue" @click="addNewTask" style="height: 55px">
+        <v-text-field
+            class="mr-2"
+            v-model="text"
+            label="Enter a new task"
+            outlined
+            v-on:keyup.enter="addNewTask">
+        </v-text-field>
+        <v-btn
+            dark
+            x-large
+            color="blue"
+            style="height: 55px"
+            @click="addNewTask">
           <v-icon>
-            mdi-plus
+            {{ iconForBtn }}
           </v-icon>
-          Add
+          {{ textForBtn }}
         </v-btn>
       </div>
 
@@ -47,37 +57,33 @@
           <div v-if="!list.length">
             <h1 class="text-center blue--text text-uppercase">
               You don't have tasks
-              <svg style="height:34px;vertical-align: text-top;" viewBox="0 0 24 24">
+              <svg style="height:34px; vertical-align: text-top;" viewBox="0 0 24 24">
                 <path fill="currentColor"
                       d="M20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12M22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2A10,10 0 0,1 22,12M15.5,8C16.3,8 17,8.7 17,9.5C17,10.3 16.3,11 15.5,11C14.7,11 14,10.3 14,9.5C14,8.7 14.7,8 15.5,8M10,9.5C10,10.3 9.3,11 8.5,11C7.7,11 7,10.3 7,9.5C7,8.7 7.7,8 8.5,8C9.3,8 10,8.7 10,9.5M12,14C13.75,14 15.29,14.72 16.19,15.81L14.77,17.23C14.32,16.5 13.25,16 12,16C10.75,16 9.68,16.5 9.23,17.23L7.81,15.81C8.71,14.72 10.25,14 12,14Z"/>
               </svg>
             </h1>
           </div>
           <v-col>
-            <v-row
-                align="center"
+            <div
                 v-for="(value, index) in list"
                 :key="value.message"
             >
-              <v-checkbox
-                  hide-details
-                  color="success"
-                  class="shrink mr-2 mt-0"
+              <TaskComponent
                   v-model="value.status"
-              ></v-checkbox>
-              <v-text-field :value="value.text" :disabled="value.status" readonly></v-text-field>
-              <v-btn class="pa-0" color="red" style="margin-left: 5px;" @click="deleteSelectedTask(index)" text>
-                <v-icon large>
-                  mdi-delete
-                </v-icon>
-              </v-btn>
-            </v-row>
+                  :text="value.text"
+                  :disabledTask="value.status"
+                  @editTask="editTask(index)"
+                  @deleteSelectedTask="deleteSelectedTask(index)"
+              />
+            </div>
           </v-col>
         </div>
       </v-card-text>
-
       <v-card-actions class="justify-space-between pa-4">
-        <v-btn color="blue" @click="deleteAllTask" text>
+        <v-btn
+            color="blue"
+            text
+            @click="deleteAllTask">
           Clear all
           <v-icon left>
             mdi-delete
@@ -97,27 +103,47 @@
 </template>
 
 <script>
+import TaskComponent from "@/components/TaskComponent";
+
 export default {
   name: 'ToDo',
+  components: {
+    TaskComponent
+  },
 
   data: () => ({
     text: '',
+    editedTask: null,
     date: new Date().toLocaleDateString('en-US', {year: 'numeric', month: '2-digit', day: '2-digit'}),
     list: [],
   }),
 
   methods: {
     addNewTask() {
-      const newNote = {text: this.text, status: false}
-      if(!this.text || !this.text.trim()){
-        return ;
+      if (!this.text || !this.text.trim()) {
+        return;
       }
-      this.list.push(newNote);
+
+      if (this.editedTask === null) {
+        this.list.push({
+          text: this.text,
+          status: false
+        });
+      } else {
+        this.list[this.editedTask].text = this.text;
+        this.editedTask = null;
+      }
+
       this.text = '';
     },
 
     deleteSelectedTask(index) {
       this.$delete(this.list, index)
+    },
+
+    editTask(index) {
+      this.text = this.list[index].text
+      this.editedTask = index
     },
 
     deleteAllTask() {
@@ -126,12 +152,20 @@ export default {
   },
 
   computed: {
-    successTasksCounter(){
+    successTasksCounter() {
       return this.list.filter(item => item.status).length;
     },
 
-    pendingTasksCounter(){
+    pendingTasksCounter() {
       return this.list.filter(item => !item.status).length;
+    },
+
+    iconForBtn() {
+      return this.editedTask !== null ? 'mdi-pencil' : 'mdi-plus'
+    },
+
+    textForBtn() {
+      return this.editedTask !== null ? 'Change' : 'Add'
     }
   },
 
@@ -153,8 +187,7 @@ export default {
 </script>
 
 <style>
-  input[disabled] {
-    text-decoration: line-through;
-    border: none;
-  }
+input[disabled] {
+  text-decoration: line-through;
+}
 </style>
